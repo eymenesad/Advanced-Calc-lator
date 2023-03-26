@@ -22,6 +22,7 @@ typedef struct {
 } Token;
 
 Token arrToken[256+1];
+int bigErrorCheck =0;
 
 
 char lookup[128][64];
@@ -318,6 +319,10 @@ int main()
         if(strchr(line,'=') == NULL){
 
             infixToPostfix(line);
+            if(bigErrorCheck==1){
+                printf("Error!");
+                continue;
+            }
             int ans = evaluatePostfix();
             printf("%d\n",ans);
         }
@@ -373,6 +378,10 @@ int main()
             
             
             infixToPostfix(value);
+            if(bigErrorCheck==1){
+                printf("Error!");
+                continue;
+            }
             int ans=0;
             ans = evaluatePostfix();
 
