@@ -25,6 +25,7 @@ Token arrToken[256+1];
 int bigErrorCheck =0;
 
 
+
 char lookup[128][64];
 int lookup_2[128];
 int a=0;
