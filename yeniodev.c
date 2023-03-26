@@ -16,18 +16,20 @@ typedef enum {
     TOKEN_TYPE_COMMA
 } TokenType;
 
+
 typedef struct {
     TokenType type;
     char value[64];
 } Token;
 
+Token checkerToken[257];
 Token arrToken[256+1];
-int bigErrorCheck =0;
 
 
 char lookup[128][64];
 int lookup_2[128];
 int a=0;
+int b=0;
 
 int precedence(char operator)
 {
@@ -57,7 +59,11 @@ int infixToPostfix(char* infix)
     
     for(int i=0;i<257;i++){
         arrToken[i].type = TOKEN_TYPE_NULLL;
+        checkerToken[i].type = TOKEN_TYPE_NULLL;
+
         strcpy(arrToken[i].value,"");
+        strcpy(checkerToken[i].value,"");
+
     }
     Token stackToken[256+1];
     Token funcStack[50];
@@ -68,6 +74,11 @@ int infixToPostfix(char* infix)
     int top = -1;
     while(i<len-1){
         if (infix[i] == ' ' || infix[i] == '\t'){
+            
+            /*if(i>0 && i<len-1 && isalnum(infix[i-1]) == isalnum(infix[i+1])){
+                bigErrorCheck=1;
+                break;
+            }*/
             i++;
             continue;
         }
@@ -84,6 +95,7 @@ int infixToPostfix(char* infix)
             }
             token.value[k] = '\0';
             arrToken[a++] = token;
+            checkerToken[b++] = token;
             
         }
 
@@ -105,12 +117,13 @@ int infixToPostfix(char* infix)
                 token.type = TOKEN_TYPE_VARIABLE;
                 arrToken[a++] = token;
             }
-            
+            checkerToken[b++] = token;
         }
 
         else if(infix[i] == ','){
             token.type = TOKEN_TYPE_COMMA;
             token.value[0] = ',';
+            checkerToken[b++] = token;
             if(strcmp(funcStack[funcCounter-1].value,"xor")==0){
 
                 while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('^') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
@@ -159,6 +172,7 @@ int infixToPostfix(char* infix)
             i++;
             token.value[i] = '\0';
             stackToken[++top]=token; 
+            checkerToken[b++]=token;
             if(strcmp(funcStack[funcCounter-1].value,"not")==0){
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
                 strcpy(stackToken[top].value,"~");
@@ -170,6 +184,8 @@ int infixToPostfix(char* infix)
         // pop the stack and add it to the strcmp(stackToken[top].value[0], '(')!=0
         // output string until empty or '(' found
         else if (infix[i] == ')') {
+            checkerToken[b++].type=TOKEN_TYPE_PARENTHESES;
+            strcpy(checkerToken[b].value,")");
             while (top > -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES ){
                 arrToken[a++] = stackToken[top--];
             }
@@ -187,6 +203,7 @@ int infixToPostfix(char* infix)
             token.type = TOKEN_TYPE_OPERATOR;
             token.value[0] = infix[i];
             token.value[1] = '\0';
+            checkerToken[b++] = token;
             while (top > -1
                    && precedence(stackToken[top].value[0])
                           >= precedence(infix[i]))
@@ -205,6 +222,38 @@ int infixToPostfix(char* infix)
     return 0;
 }
 
+int checkFunc(){
+    checkerToken;
+    for(int k=0;k<b-1;k++){
+        if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
+            if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
+                return 1;
+            }else if(checkerToken[k+1].type == TOKEN_TYPE_VARIABLE){
+                return 1;
+            }
+        }
+        if(checkerToken[k].type == TOKEN_TYPE_VARIABLE){
+            if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
+                return 1;
+            }else if(checkerToken[k+1].type == TOKEN_TYPE_VARIABLE){
+                return 1;
+            }
+        }
+        if(checkerToken[k].type == TOKEN_TYPE_OPERATOR){
+            if(checkerToken[k+1].type == TOKEN_TYPE_OPERATOR){
+                return 1;
+            }
+        }
+        if(checkerToken[k].type == TOKEN_TYPE_FUNCTION){
+            if(checkerToken[k+1].value[0] != '('){
+            //if(checkerToken[k+1].type != TOKEN_TYPE_PARENTHESES){
+                return 1;
+            }
+        }
+        
+    }
+    return 0;
+}
 
  
 int evaluatePostfix()
@@ -330,16 +379,35 @@ int main()
             //strcpy(line,"");
             strcpy(line,line2);
         }
+        int spaceFlag=1;
+        for(int j=0;line[j]!='\n';j++){
+            if(!isspace(line[j])){
+                spaceFlag=0;
+            }
+        }
+        if(spaceFlag==1){
+            printf("> ");
+            continue;
+        }
+        
         if(strchr(line,'=') == NULL){
 
             infixToPostfix(line);
-            if(bigErrorCheck==1){
-                printf("Error!");
+            /*for(int jj=0;jj<b;jj++){
+                
+                printf(checkerToken[jj].value );
+
+            }*/
+            int check_number = checkFunc();
+            if(check_number==1){
+                printf("Error!\n");
+                printf("> ");
+
                 continue;
             }
+
             int ans = 0;
             ans = evaluatePostfix();
-            
             printf("%d\n",ans);
             
         }
@@ -395,8 +463,10 @@ int main()
             
             
             infixToPostfix(value);
-            if(bigErrorCheck==1){
-                printf("Error!");
+            int check_number = checkFunc();
+            if(check_number==1){
+                printf("Error!\n");
+                printf("> ");
                 continue;
             }
             int ans=0;
