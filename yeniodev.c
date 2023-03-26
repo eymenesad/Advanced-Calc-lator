@@ -311,19 +311,23 @@ int main()
 
     int index_of_lookup=0;
     char line[256 +1] = "";
-    char line2[256+1]="";
     printf("> ");
     while(fgets(line,sizeof(line),stdin)){
         
         if(line==NULL){
             break;
         }
+        char line2[256+1]="";
+
         if(strchr(line,'%') != NULL){
             int ii=0;
             while(line[ii]!='%'){
                 line2[ii]=line[ii];
                 ii++;
             }
+            line2[ii] = '\n';
+            memset(line,'\0',sizeof(line));
+            //strcpy(line,"");
             strcpy(line,line2);
         }
         if(strchr(line,'=') == NULL){
@@ -333,8 +337,8 @@ int main()
                 printf("Error!");
                 continue;
             }
-
-            int ans = evaluatePostfix();
+            int ans = 0;
+            ans = evaluatePostfix();
             
             printf("%d\n",ans);
             
