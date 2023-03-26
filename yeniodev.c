@@ -35,11 +35,10 @@ int precedence(char operator)
     case '-':
         return 1;
     case '*':
-    case '/':
         return 2;
     case '&':
     case '|':
-        return 3;
+        return 0;
     
     default:
         return -1;
@@ -100,7 +99,7 @@ int infixToPostfix(char* infix)
             if(strcmp(token.value, "xor") == 0 || strcmp(token.value, "ls") == 0||strcmp(token.value, "rs") == 0||strcmp(token.value, "lr") == 0||strcmp(token.value, "rr") == 0||strcmp(token.value, "not") == 0 ){
                 token.type = TOKEN_TYPE_FUNCTION;
                 funcStack[funcCounter++] = token;
-
+                
             }else{
                 token.type = TOKEN_TYPE_VARIABLE;
                 arrToken[a++] = token;
@@ -111,49 +110,43 @@ int infixToPostfix(char* infix)
         else if(infix[i] == ','){
             token.type = TOKEN_TYPE_COMMA;
             token.value[0] = ',';
-            if(strcmp(funcStack[funcCounter].value,"xor")==0){
+            if(strcmp(funcStack[funcCounter-1].value,"xor")==0){
 
                 while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('^') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
                     arrToken[a++] = stackToken[top--];
                 }
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
                 strcpy(stackToken[top].value,"^");                
-            }else if(strcmp(funcStack[funcCounter].value,"ls")==0){
+            }else if(strcmp(funcStack[funcCounter-1].value,"ls")==0){
 
-                while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('<<') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
+                while (top > -1 && precedence(stackToken[top].value[0]) >= -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
                     arrToken[a++] = stackToken[top--];
                 }
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
                 strcpy(stackToken[top].value,"<<");                
-            }else if(strcmp(funcStack[funcCounter].value,"rs")==0){
+            }else if(strcmp(funcStack[funcCounter-1].value,"rs")==0){
 
-                while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('>>') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
+                while (top > -1 && precedence(stackToken[top].value[0]) >= -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
                     arrToken[a++] = stackToken[top--];
                 }
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
                 strcpy(stackToken[top].value,">>");                
-            }/*if(strcmp(funcStack[--funcCounter].value,"lr")==0){
+            }else if(strcmp(funcStack[funcCounter-1].value,"lr")==0){
 
-                while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('^') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
+                while (top > -1 && precedence(stackToken[top].value[0]) >= -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
                     arrToken[a++] = stackToken[top--];
                 }
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
-                strcpy(stackToken[top].value,"^");                
-            }if(strcmp(funcStack[--funcCounter].value,"rr")==0){
+                strcpy(stackToken[top].value,"lr");                
+            }else if(strcmp(funcStack[funcCounter-1].value,"rr")==0){
 
-                while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('^') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
+                while (top > -1 && precedence(stackToken[top].value[0]) >= -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
                     arrToken[a++] = stackToken[top--];
                 }
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
-                strcpy(stackToken[top].value,"^");                
-            }if(strcmp(funcStack[--funcCounter].value,"not")==0){
-
-                while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('^') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
-                    arrToken[a++] = stackToken[top--];
-                }
-                stackToken[++top].type = TOKEN_TYPE_OPERATOR;
-                strcpy(stackToken[top].value,"^");                
-            }*/
+                strcpy(stackToken[top].value,"rr");                
+            }
+            funcCounter--;
             i++;
         }
        
@@ -165,6 +158,11 @@ int infixToPostfix(char* infix)
             i++;
             token.value[i] = '\0';
             stackToken[++top]=token; 
+            if(strcmp(funcStack[funcCounter-1].value,"not")==0){
+                stackToken[++top].type = TOKEN_TYPE_OPERATOR;
+                strcpy(stackToken[top].value,"~");
+                funcCounter--;
+            }
         }
        
         // if the scanned character is ')'
@@ -230,68 +228,43 @@ int evaluatePostfix()
             if (tok1.type == TOKEN_TYPE_NUMBER){
                 
                 sscanf(tok1.value,"%d",&val1);
-            }/*else if (tok1.type == TOKEN_TYPE_VARIABLE){
-                
-                for(int m=0;m<128;m++){
-                    if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], tok1.value)==0){
-                        val1 = lookup_2[m];
-                        break;
-                    }
-                }
-            }*/
-            Token tok2 = tstack[--toptstack];
-            int val2=0;
-            if (tok2.type == TOKEN_TYPE_NUMBER){
-                sscanf(tok2.value,"%d",&val2);
-            }/*else if (tok2.type == TOKEN_TYPE_VARIABLE){
-                
-                for(int m=0;m<128;m++){
-                    if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], tok2.value)==0){
-                        val2 = lookup_2[m];
-                        break;
-                    }
-                }
-            }*/
-            
-            int outcome;
-            if(strcmp(op_val,"+")==0){
-                outcome = val1+val2;
-            }else if(strcmp(op_val,"-")==0){
-                outcome = val2-val1;
-            }else if(strcmp(op_val,"*")==0){
-                outcome = val1*val2;
-            }else if(strcmp(op_val,"&")==0){
-                outcome = val1&val2;
-            }else if(strcmp(op_val,"|")==0){
-                outcome = val1|val2;
-            }else if(strcmp(op_val,"^")==0){
-                outcome = val1^val2;
-            }else if(strcmp(op_val,">>")==0){
-                outcome = val1>>val2;
-            }else if(strcmp(op_val,"<<")==0){
-                outcome = val1<<val2;
             }
-            /*switch (op_val)
-            {
-            case '+': 
-                outcome = val1+val2;
-                break;
-            case '-': 
-                outcome = val2-val1;
-                break;
-            case '*': 
-                outcome = val1*val2;
-                break;
-            case '&': 
-                outcome = val1&val2;
-                break;
-            case '|': 
-                outcome = val1|val2;
-                break;
-            case '^': 
-                outcome = val1^val2;
-                break;
-            }*/
+
+            int outcome=0;
+            if(strcmp(op_val,"~")==0){
+                outcome = ~val1;
+            }else{
+                Token tok2 = tstack[--toptstack];
+                int val2=0;
+                if (tok2.type == TOKEN_TYPE_NUMBER){
+                    sscanf(tok2.value,"%d",&val2);
+                }
+                
+                
+                
+                if(strcmp(op_val,"+")==0){
+                    outcome = val1+val2;
+                }else if(strcmp(op_val,"-")==0){
+                    outcome = val2-val1;
+                }else if(strcmp(op_val,"*")==0){
+                    outcome = val1*val2;
+                }else if(strcmp(op_val,"&")==0){
+                    outcome = val1&val2;
+                }else if(strcmp(op_val,"|")==0){
+                    outcome = val1|val2;
+                }else if(strcmp(op_val,"^")==0){
+                    outcome = val1^val2;
+                }else if(strcmp(op_val,">>")==0){
+                    outcome = val2>>val1;
+                }else if(strcmp(op_val,"<<")==0){
+                    outcome = val2<<val1;
+                }else if(strcmp(op_val,"lr")==0){
+                    outcome = (val2 << val1%32) | (val2 >> (32-val1)%32);
+                }else if(strcmp(op_val,"rr")==0){
+                    outcome = (val2 >> val1%32) | (val2 << (32-val1) % 32);
+                }
+            }
+            
             tstack[toptstack].type=TOKEN_TYPE_NUMBER ;
             sprintf(tstack[toptstack].value,"%d",outcome);
             toptstack++;
@@ -318,7 +291,16 @@ int evaluatePostfix()
     sscanf(tstack[toptstack-1].value,"%d",&res);
     return res;
 }
-
+int isInsideLookup(char arr[]){
+    int ind_look=0;
+    for(int m=0;m<128;m++){
+        if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arr)==0){
+            return ind_look;
+            break;
+        }
+    }
+    return -1;
+}
 int main()
 {
     for(int k=0;k<128;k++){
@@ -343,25 +325,67 @@ int main()
             char temp[257];
             strcpy(temp,line);
 
-            char* token;
-            token = strtok(temp, "=");
             
-            for(int i=0;token[i]!='\0';i++){
-                lookup[index_of_lookup][i] = token[i];
+            char* token = strtok(temp, "=");
+           
+            char* value = strtok(NULL, "=");
+            char token_array[64] = "";
+            
+            
+            int hasError = 0;
+            int my_flag=0;
+            int i=0;
+            while(token[i]!='\0'){
+                
+                if (isspace(token[i])) {
+                    // skip whitespace characters
+                    
+                    i++;
+                    continue;
+                }
+
+                if (!isalpha(token[i])){
+                    hasError=1;
+                    i++;
+                }else {
+                    if (my_flag == 1){
+                        hasError=1;
+                    }
+                    int k = 0;
+                    my_flag=1;
+                    while(isalpha(token[i])){
+                        token_array[k]=token[i];
+                        k++;
+                        i++;
+                        
+                    }
+                    token_array[k] = '\0';
+                }                 
+                
+            }
+            if(hasError == 1){
+                printf("Error!\n");
+                printf("> ");
+                continue;
             }
 
-
-            token = strtok(NULL, "=");
-            infixToPostfix(token);
+            int ifInside = isInsideLookup(token_array);
+            
+            
+            infixToPostfix(value);
             int ans=0;
             ans = evaluatePostfix();
-            lookup_2[index_of_lookup] = ans;
-            
-            printf("%s\n",lookup[index_of_lookup]);
-            printf("%d\n",lookup_2[index_of_lookup]);
-            
-            index_of_lookup++;
-                        
+
+
+            if(ifInside==-1){
+                strcpy(lookup[index_of_lookup],token_array);
+                lookup_2[index_of_lookup] = ans;
+                           
+                index_of_lookup++;
+            }else{
+                lookup_2[ifInside] = ans;
+            }
+                                    
         }    
         printf("> ");
     }
