@@ -25,7 +25,6 @@ Token arrToken[256+1];
 int bigErrorCheck =0;
 
 
-
 char lookup[128][64];
 int lookup_2[128];
 int a=0;
@@ -312,10 +311,20 @@ int main()
 
     int index_of_lookup=0;
     char line[256 +1] = "";
+    char line2[256+1]="";
     printf("> ");
     while(fgets(line,sizeof(line),stdin)){
+        
         if(line==NULL){
             break;
+        }
+        if(strchr(line,'%') != NULL){
+            int ii=0;
+            while(line[ii]!='%'){
+                line2[ii]=line[ii];
+                ii++;
+            }
+            strcpy(line,line2);
         }
         if(strchr(line,'=') == NULL){
 
@@ -324,8 +333,11 @@ int main()
                 printf("Error!");
                 continue;
             }
+
             int ans = evaluatePostfix();
+            
             printf("%d\n",ans);
+            
         }
         else{
             char temp[257];
@@ -349,7 +361,7 @@ int main()
                     i++;
                     continue;
                 }
-
+                
                 if (!isalpha(token[i])){
                     hasError=1;
                     i++;
@@ -374,7 +386,7 @@ int main()
                 printf("> ");
                 continue;
             }
-
+            
             int ifInside = isInsideLookup(token_array);
             
             
