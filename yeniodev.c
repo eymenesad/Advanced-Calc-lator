@@ -269,9 +269,7 @@ int checkFunc(){
                 isEqualParantheses--;
             }
         }
-        /*if(checkerToken[k].type == TOKEN_TYPE_FUNCTION && strcmp(checkerToken[k].value,"not")!=0){
-            if(checkerToken[k+1])
-        }*/
+        
         
     }
     if(isEqualParantheses != 0){
