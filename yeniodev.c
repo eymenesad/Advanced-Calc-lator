@@ -5,7 +5,6 @@
 
 #define MAX_EXPR_SIZE 256
 
-
 typedef enum {
     TOKEN_TYPE_NULLL,
     TOKEN_TYPE_NUMBER,
@@ -27,7 +26,7 @@ Token arrToken[256+1];
 
 
 char lookup[128][64];
-int lookup_2[128];
+long long lookup_2[128];
 int a=0;
 int b=0;
 
@@ -256,7 +255,7 @@ int checkFunc(){
 }
 
  
-int evaluatePostfix()
+long long evaluatePostfix()
 {
     
     int toptstack=0;
@@ -274,20 +273,20 @@ int evaluatePostfix()
             char op_val[64];
             strcpy(op_val, arrToken[i].value);
             Token tok1 = tstack[--toptstack];
-            int val1=0;
+            long long val1=0;
             if (tok1.type == TOKEN_TYPE_NUMBER){
                 
-                sscanf(tok1.value,"%d",&val1);
+                sscanf(tok1.value,"%lld",&val1);
             }
 
-            int outcome=0;
+            long long outcome=0;
             if(strcmp(op_val,"~")==0){
                 outcome = ~val1;
             }else{
                 Token tok2 = tstack[--toptstack];
-                int val2=0;
+                long long val2=0;
                 if (tok2.type == TOKEN_TYPE_NUMBER){
-                    sscanf(tok2.value,"%d",&val2);
+                    sscanf(tok2.value,"%lld",&val2);
                 }
                 
                 
@@ -309,14 +308,14 @@ int evaluatePostfix()
                 }else if(strcmp(op_val,"<<")==0){
                     outcome = val2<<val1;
                 }else if(strcmp(op_val,"lr")==0){
-                    outcome = (val2 << val1%32) | (val2 >> (32-val1)%32);
+                    outcome = (val2 << val1%64) | (val2 >> (64-val1)%64);
                 }else if(strcmp(op_val,"rr")==0){
-                    outcome = (val2 >> val1%32) | (val2 << (32-val1) % 32);
+                    outcome = (val2 >> val1%64) | (val2 << (64-val1)%64);
                 }
             }
             
             tstack[toptstack].type=TOKEN_TYPE_NUMBER ;
-            sprintf(tstack[toptstack].value,"%d",outcome);
+            sprintf(tstack[toptstack].value,"%lld",outcome);
             toptstack++;
         }else if(arrToken[i].type == TOKEN_TYPE_NUMBER){
             tstack[toptstack].type = arrToken[i].type;
@@ -324,7 +323,7 @@ int evaluatePostfix()
             strcpy(tstack[toptstack].value,arrToken[i].value);
             toptstack++;
         }else if(arrToken[i].type == TOKEN_TYPE_VARIABLE){
-            int val_var=0;
+            long long val_var=0;
             for(int m=0;m<128;m++){
                 if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arrToken[i].value)==0){
                     val_var = lookup_2[m];
@@ -332,13 +331,13 @@ int evaluatePostfix()
                 }
             }
             tstack[toptstack].type = TOKEN_TYPE_NUMBER;
-            sprintf(tstack[toptstack].value,"%d",val_var);
+            sprintf(tstack[toptstack].value,"%lld",val_var);
             toptstack++;
         }
                 
     }
-    int res=0;
-    sscanf(tstack[toptstack-1].value,"%d",&res);
+    long long res=0;
+    sscanf(tstack[toptstack-1].value,"%lld",&res);
     return res;
 }
 int isInsideLookup(char arr[]){
@@ -406,9 +405,9 @@ int main()
                 continue;
             }
 
-            int ans = 0;
+            long long ans = 0;
             ans = evaluatePostfix();
-            printf("%d\n",ans);
+            printf("%lld\n",ans);
             
         }
         else{
@@ -469,7 +468,7 @@ int main()
                 printf("> ");
                 continue;
             }
-            int ans=0;
+            long long ans=0;
             ans = evaluatePostfix();
 
 
