@@ -29,6 +29,7 @@ char lookup[128][64];
 long long lookup_2[128];
 int a=0;
 int b=0;
+int bigCheck=0;
 
 int precedence(char operator)
 {
@@ -55,7 +56,7 @@ int isOperator(char ch)
 int infixToPostfix(char* infix)
 {
     a=0;
-    
+    bigCheck=0;
     for(int i=0;i<257;i++){
         arrToken[i].type = TOKEN_TYPE_NULLL;
         checkerToken[i].type = TOKEN_TYPE_NULLL;
@@ -74,10 +75,7 @@ int infixToPostfix(char* infix)
     while(i<len-1){
         if (infix[i] == ' ' || infix[i] == '\t'){
             
-            /*if(i>0 && i<len-1 && isalnum(infix[i-1]) == isalnum(infix[i+1])){
-                bigErrorCheck=1;
-                break;
-            }*/
+            
             i++;
             continue;
         }
@@ -123,6 +121,10 @@ int infixToPostfix(char* infix)
             token.type = TOKEN_TYPE_COMMA;
             token.value[0] = ',';
             checkerToken[b++] = token;
+            if(funcCounter==0){
+                bigCheck=1;
+                break;
+            }
             if(strcmp(funcStack[funcCounter-1].value,"xor")==0){
 
                 while (top > -1 && precedence(stackToken[top].value[0]) >= precedence('^') && stackToken[top].type != TOKEN_TYPE_PARENTHESES){
@@ -183,17 +185,21 @@ int infixToPostfix(char* infix)
         // pop the stack and add it to the strcmp(stackToken[top].value[0], '(')!=0
         // output string until empty or '(' found
         else if (infix[i] == ')') {
-            checkerToken[b++].type=TOKEN_TYPE_PARENTHESES;
-            strcpy(checkerToken[b].value,")");
+            checkerToken[b].type=TOKEN_TYPE_PARENTHESES;
+            strcpy(checkerToken[b++].value,")");
             while (top > -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES ){
                 arrToken[a++] = stackToken[top--];
             }
             //dikkat!!!
-            if (top > -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES )
-                ;
+            if (top > -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES ){
+            //if(top==-1){
+                bigCheck=1;
+                
                 //return "Error!";
-            else
+            }
+            else{
                 top--;
+            }
             i++;
         }
        
@@ -210,11 +216,17 @@ int infixToPostfix(char* infix)
             stackToken[++top] = token;
             i++;
         }
+
+        else{
+            bigCheck=1;
+            break;
+        }
     }
  
     while (top > -1) {
         if (stackToken[top].type == TOKEN_TYPE_PARENTHESES) {
-            ;//return "Error!";
+            bigCheck=1;
+            //return "Error!";
         }
         arrToken[a++] = stackToken[top--];
     }
@@ -222,8 +234,8 @@ int infixToPostfix(char* infix)
 }
 
 int checkFunc(){
-    checkerToken;
-    for(int k=0;k<b-1;k++){
+    int isEqualParantheses=0;
+    for(int k=0;k<b;k++){
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
             if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
                 return 1;
@@ -249,7 +261,21 @@ int checkFunc(){
                 return 1;
             }
         }
+        if(checkerToken[k].type == TOKEN_TYPE_PARENTHESES){
+            if(checkerToken[k].value[0] == '('){
+                isEqualParantheses++;
+            }
+            if(checkerToken[k].value[0] == ')'){
+                isEqualParantheses--;
+            }
+        }
+        /*if(checkerToken[k].type == TOKEN_TYPE_FUNCTION && strcmp(checkerToken[k].value,"not")!=0){
+            if(checkerToken[k+1])
+        }*/
         
+    }
+    if(isEqualParantheses != 0){
+        return 1;
     }
     return 0;
 }
@@ -398,7 +424,7 @@ int main()
 
             }*/
             int check_number = checkFunc();
-            if(check_number==1){
+            if(check_number==1 || bigCheck==1){
                 printf("Error!\n");
                 printf("> ");
 
@@ -463,7 +489,7 @@ int main()
             
             infixToPostfix(value);
             int check_number = checkFunc();
-            if(check_number==1){
+            if(check_number==1 || bigCheck==1){
                 printf("Error!\n");
                 printf("> ");
                 continue;
