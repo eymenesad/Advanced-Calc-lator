@@ -24,7 +24,7 @@ typedef struct {
 Token checkerToken[257];
 Token arrToken[256+1];
 
-
+//
 char lookup[128][64];
 long long lookup_2[128];
 int a=0;
@@ -239,7 +239,6 @@ int checkFunc(){
     int count_func_with_comma=0;
     int comma_count=0;
     int constant=0;
-    int specific=0;
     for(int k=0;k<b;k++){
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
             if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
@@ -268,9 +267,7 @@ int checkFunc(){
             if(strcmp(checkerToken[k].value,"not")!=0){
                 constant = isEqualParantheses;
                 count_func_with_comma++;
-                if(checkerToken[k+2].value[0]=='('){
-                    specific=1;
-                }
+                
             }
             num=0;
 
@@ -288,9 +285,7 @@ int checkFunc(){
                     }
                     num=0;
                     constant--;
-                    if(checkerToken[k-1].value[0] == ')' && specific==1){
-                        return 1;
-                    }
+                    
                 }
                 
             }
