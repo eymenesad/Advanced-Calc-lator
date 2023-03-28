@@ -282,6 +282,8 @@ int checkFunc(){
                     if(num>=2){
                         return 1;
                     }
+                    num=0;
+                    constant--;
                 }
                 
             }
