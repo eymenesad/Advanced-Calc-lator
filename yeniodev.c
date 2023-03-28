@@ -5,6 +5,7 @@
 
 #define MAX_EXPR_SIZE 256
 
+//TokenType enum is used for classification of token types.
 typedef enum {
     TOKEN_TYPE_NULLL,
     TOKEN_TYPE_NUMBER,
@@ -15,22 +16,32 @@ typedef enum {
     TOKEN_TYPE_COMMA
 } TokenType;
 
-
+//Token struct 
 typedef struct {
     TokenType type;
     char value[64];
 } Token;
 
+// The aim of checkerToken array is to check if the expression should return "Error!" or not. It contains the raw-expression that is splitted by tokens. 
 Token checkerToken[257];
+
+// The postfix expression is kept in arrToken.
 Token arrToken[256+1];
 
-//
+// Lookup arrays are for memorization of variables. Lookup array records the input as string and lookup_2 records integer value of that string.
 char lookup[128][64];
 long long lookup_2[128];
+
+// a is the index of arrToken
 int a=0;
+
+// b is the index of checkerToken
 int b=0;
+
+// this is flag that we use in possible error places. This is not a specific flag
 int bigCheck=0;
 
+// indicates the precedence of operators
 int precedence(char operator)
 {
     switch (operator) {
@@ -47,16 +58,17 @@ int precedence(char operator)
         return -1;
     }
 }
- 
+// indicates operators
 int isOperator(char ch)
 {
     return (ch == '+' || ch == '-' || ch == '*' || ch == '&' || ch == '|');
 }
-
+// converts infix epression to postfix expression
 int infixToPostfix(char* infix)
 {
     a=0;
     bigCheck=0;
+    //initializing arrToken and checkerToken
     for(int i=0;i<257;i++){
         arrToken[i].type = TOKEN_TYPE_NULLL;
         checkerToken[i].type = TOKEN_TYPE_NULLL;
@@ -65,14 +77,19 @@ int infixToPostfix(char* infix)
         strcpy(checkerToken[i].value,"");
 
     }
+    // stackToken includes operators, functions and parantheses  
     Token stackToken[256+1];
+    // funcStack shows which function is the last one
     Token funcStack[50];
+    // index for funcStack
     int funcCounter=0;
 
     int i=0, j=0;
     int len = strlen(infix);
     int top = -1;
+    //iterating through chars of infix expression
     while(i<len-1){
+        //skipping blankspaces
         if (infix[i] == ' ' || infix[i] == '\t'){
             
             
@@ -81,7 +98,7 @@ int infixToPostfix(char* infix)
         }
         Token token;
         
-        
+        //checking if an incoming char is digit and if so tokenizes it. Then, adding this token to arrToken and checkerToken.  
         if (isdigit(infix[i])) {
             token.type = TOKEN_TYPE_NUMBER;
             int k = 0;
@@ -96,6 +113,7 @@ int infixToPostfix(char* infix)
             
         }
 
+        //checking if an incoming char is alphabetic and if so tokenizes it. Then, adding this token to arrToken and checkerToken.  
         else if (isalpha(infix[i])) {
             
             int k = 0;
@@ -105,18 +123,20 @@ int infixToPostfix(char* infix)
                 i++;
             }
             token.value[k] = '\0';
-            
+            //checking if the token is function or not, then adding into funcStack.
             if(strcmp(token.value, "xor") == 0 || strcmp(token.value, "ls") == 0||strcmp(token.value, "rs") == 0||strcmp(token.value, "lr") == 0||strcmp(token.value, "rr") == 0||strcmp(token.value, "not") == 0 ){
                 token.type = TOKEN_TYPE_FUNCTION;
                 funcStack[funcCounter++] = token;
                 
-            }else{
+            }else{ // if it is not a function, then it must be a variable. 
                 token.type = TOKEN_TYPE_VARIABLE;
                 arrToken[a++] = token;
             }
             checkerToken[b++] = token;
         }
 
+        //if the incoming char is comma, initially tokenizes it, then looks at the last function and add the operator of it to the stackToken.  
+        // This is important part for the placement of the function (except not) operator to stack and postfix. 
         else if(infix[i] == ','){
             token.type = TOKEN_TYPE_COMMA;
             token.value[0] = ',';
@@ -165,8 +185,7 @@ int infixToPostfix(char* infix)
             i++;
         }
        
-        // if the scanned character is '('
-        // push it in the stack
+        // if the character is '(' push it in the stackToken
         else if (infix[i] == '(') {
             token.type = TOKEN_TYPE_PARENTHESES;
             token.value[0]=infix[i];
@@ -174,6 +193,7 @@ int infixToPostfix(char* infix)
             token.value[i] = '\0';
             stackToken[++top]=token; 
             checkerToken[b++]=token;
+            //if the last function is "not", execute not operation for postfix
             if(strcmp(funcStack[funcCounter-1].value,"not")==0){
                 stackToken[++top].type = TOKEN_TYPE_OPERATOR;
                 strcpy(stackToken[top].value,"~");
@@ -181,7 +201,7 @@ int infixToPostfix(char* infix)
             }
         }
        
-        // if the scanned character is ')'
+        // if the character is ')'
         // pop the stack and add it to the strcmp(stackToken[top].value[0], '(')!=0
         // output string until empty or '(' found
         else if (infix[i] == ')') {
@@ -190,12 +210,9 @@ int infixToPostfix(char* infix)
             while (top > -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES ){
                 arrToken[a++] = stackToken[top--];
             }
-            //dikkat!!!
             if (top > -1 && stackToken[top].type != TOKEN_TYPE_PARENTHESES ){
-            //if(top==-1){
                 bigCheck=1;
                 
-                //return "Error!";
             }
             else{
                 top--;
@@ -203,7 +220,9 @@ int infixToPostfix(char* infix)
             i++;
         }
        
-       
+        // checking if the char is operator
+        // push it to the stack after considering the precedence
+
         else if (isOperator(infix[i])) {
             token.type = TOKEN_TYPE_OPERATOR;
             token.value[0] = infix[i];
@@ -222,11 +241,10 @@ int infixToPostfix(char* infix)
             break;
         }
     }
- 
+    // checking if the parantheses are balanced 
     while (top > -1) {
         if (stackToken[top].type == TOKEN_TYPE_PARENTHESES) {
             bigCheck=1;
-            //return "Error!";
         }
         arrToken[a++] = stackToken[top--];
     }
@@ -306,21 +324,24 @@ int checkFunc(){
     return 0;
 }
 
- 
+// This function calculates the postfix notation coming from infixToPostfix function
 long long evaluatePostfix()
 {
-    
+    // index for tstack
     int toptstack=0;
- 
+    
+    // initializing stack to evaluate postfix
     Token tstack[256];
     for(int l=0;l<257;l++){
         tstack[l].type = TOKEN_TYPE_NULLL;
         strcpy(tstack[l].value,"");
     }
- 
+    //iterating in postfix notation
     for (int i = 0; i< a; i++)
     {
-               
+        // if the type of the token is operator, then pop the last two element from tstak
+        // evaluate the result with these values and operator
+        // then, push this result back to the tstack
         if(arrToken[i].type == TOKEN_TYPE_OPERATOR){
             char op_val[64];
             strcpy(op_val, arrToken[i].value);
@@ -369,11 +390,16 @@ long long evaluatePostfix()
             tstack[toptstack].type=TOKEN_TYPE_NUMBER ;
             sprintf(tstack[toptstack].value,"%lld",outcome);
             toptstack++;
+        // if the type of the token is number
+        // directly push it to the tstack
         }else if(arrToken[i].type == TOKEN_TYPE_NUMBER){
             tstack[toptstack].type = arrToken[i].type;
             
             strcpy(tstack[toptstack].value,arrToken[i].value);
             toptstack++;
+        // if the type of the token is variable
+        // look at the lookup tables to find the int value of that variable
+        // push this int value to the tstack
         }else if(arrToken[i].type == TOKEN_TYPE_VARIABLE){
             long long val_var=0;
             for(int m=0;m<128;m++){
@@ -392,6 +418,7 @@ long long evaluatePostfix()
     sscanf(tstack[toptstack-1].value,"%lld",&res);
     return res;
 }
+//function for checking if the given variable is in the lookup array
 int isInsideLookup(char arr[]){
     int ind_look=0;
     for(int m=0;m<128;m++){
@@ -404,11 +431,12 @@ int isInsideLookup(char arr[]){
 }
 int main()
 {
+    //initializing the lookup arrays
     for(int k=0;k<128;k++){
         strcpy(lookup[k],"");
         lookup_2[k]=0;
     }
-
+    //index for lookup arrays
     int index_of_lookup=0;
     char line[256 +1] = "";
     printf("> ");
@@ -418,7 +446,8 @@ int main()
             break;
         }
         char line2[256+1]="";
-
+        // if the line contains '%' 
+        // discard the part after %
         if(strchr(line,'%') != NULL){
             int ii=0;
             while(line[ii]!='%'){
@@ -427,9 +456,9 @@ int main()
             }
             line2[ii] = '\n';
             memset(line,'\0',sizeof(line));
-            //strcpy(line,"");
             strcpy(line,line2);
         }
+        // This part enables to the code to continue if the input is blank line
         int spaceFlag=1;
         for(int j=0;line[j]!='\n';j++){
             if(!isspace(line[j])){
@@ -440,15 +469,12 @@ int main()
             printf("> ");
             continue;
         }
-        
+        // if the line does not include '='
+        // execute the infixToPostfix and evaluatePostfix functions respectively.
         if(strchr(line,'=') == NULL){
 
             infixToPostfix(line);
-            /*for(int jj=0;jj<b;jj++){
-                
-                printf(checkerToken[jj].value );
-
-            }*/
+            
             int check_number = checkFunc();
             if(check_number==1 || bigCheck==1){
                 printf("Error!\n");
@@ -461,8 +487,10 @@ int main()
             ans = evaluatePostfix();
             printf("%lld\n",ans);
             
-        }
-        else{
+        }else{
+        // splitting the line by =
+        
+        
             char temp[257];
             strcpy(temp,line);
 
@@ -472,7 +500,7 @@ int main()
             char* value = strtok(NULL, "=");
             char token_array[64] = "";
             
-            
+            // checking if the left side of = has any errors
             int hasError = 0;
             int my_flag=0;
             int i=0;
@@ -512,7 +540,7 @@ int main()
             
             int ifInside = isInsideLookup(token_array);
             
-            
+            // calculate the right side by sending it to the infixToPostfix and evaluatePostfix functions respectively.
             infixToPostfix(value);
             int check_number = checkFunc();
             if(check_number==1 || bigCheck==1){
@@ -523,13 +551,16 @@ int main()
             long long ans=0;
             ans = evaluatePostfix();
 
-
+            // if the variable is not in lookup array
+            // assign the variable and its value to lookup arrays separately
             if(ifInside==-1){
                 strcpy(lookup[index_of_lookup],token_array);
                 lookup_2[index_of_lookup] = ans;
                            
                 index_of_lookup++;
             }else{
+                 
+                // just change the value of it
                 lookup_2[ifInside] = ans;
             }
                                     
@@ -539,3 +570,5 @@ int main()
     
     return 0;
 }
+
+//xor((3,5))
