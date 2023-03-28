@@ -235,6 +235,10 @@ int infixToPostfix(char* infix)
 
 int checkFunc(){
     int isEqualParantheses=0;
+    int num=0;
+    int count_func_with_comma=0;
+    int comma_count=0;
+    int constant=0;
     for(int k=0;k<b;k++){
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
             if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
@@ -260,19 +264,39 @@ int checkFunc(){
             //if(checkerToken[k+1].type != TOKEN_TYPE_PARENTHESES){
                 return 1;
             }
+            if(strcmp(checkerToken[k].value,"not")!=0){
+                constant = isEqualParantheses;
+                count_func_with_comma++;
+            }
+            num=0;
+
         }
         if(checkerToken[k].type == TOKEN_TYPE_PARENTHESES){
             if(checkerToken[k].value[0] == '('){
                 isEqualParantheses++;
+                
             }
             if(checkerToken[k].value[0] == ')'){
                 isEqualParantheses--;
+                if(isEqualParantheses == constant){
+                    if(num>=2){
+                        return 1;
+                    }
+                }
+                
             }
+        }
+        if(checkerToken[k].type == TOKEN_TYPE_COMMA){
+            num++;
+            comma_count++;
         }
         
         
     }
     if(isEqualParantheses != 0){
+        return 1;
+    }
+    if(comma_count!=count_func_with_comma){
         return 1;
     }
     return 0;
