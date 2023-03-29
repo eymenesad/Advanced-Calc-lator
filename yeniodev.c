@@ -5,7 +5,7 @@
 
 #define MAX_EXPR_SIZE 256
 
-//TokenType enum is used for classification of token types.
+//TokenType enum is used for classification of the token types.
 typedef enum {
     TOKEN_TYPE_NULLL,
     TOKEN_TYPE_NUMBER,
@@ -19,7 +19,7 @@ typedef enum {
 //Token struct 
 typedef struct {
     TokenType type;
-    char value[64];
+    char value[257];
 } Token;
 
 // The aim of checkerToken array is to check if the expression should return "Error!" or not. It contains the raw-expression that is splitted by tokens. 
@@ -29,7 +29,7 @@ Token checkerToken[257];
 Token arrToken[256+1];
 
 // Lookup arrays are for memorization of variables. Lookup array records the input as string and lookup_2 records integer value of that string.
-char lookup[128][64];
+char lookup[128][257];
 long long lookup_2[128];
 
 // a is the index of arrToken
@@ -251,13 +251,17 @@ int infixToPostfix(char* infix)
     return 0;
 }
 
+// big function for checking errors
 int checkFunc(){
+    // initializing parameters or flags to be used
     int isEqualParantheses=0;
     int num=0;
     int count_func_with_comma=0;
     int comma_count=0;
     int constant=0;
+    int insideFunc=0;
     for(int k=0;k<b;k++){
+        // two seperate number cannot be placed next to each other
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
             if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
                 return 1;
@@ -265,6 +269,7 @@ int checkFunc(){
                 return 1;
             }
         }
+        // two seperate variable cannot be placed next to each other
         if(checkerToken[k].type == TOKEN_TYPE_VARIABLE){
             if(checkerToken[k+1].type == TOKEN_TYPE_NUMBER){
                 return 1;
@@ -272,52 +277,74 @@ int checkFunc(){
                 return 1;
             }
         }
+        // two operator number cannot be placed next to each other
         if(checkerToken[k].type == TOKEN_TYPE_OPERATOR){
             if(checkerToken[k+1].type == TOKEN_TYPE_OPERATOR){
                 return 1;
             }
         }
+        //if the token is function
+        //the next token should be left parantheses
         if(checkerToken[k].type == TOKEN_TYPE_FUNCTION){
             if(checkerToken[k+1].value[0] != '('){
-            //if(checkerToken[k+1].type != TOKEN_TYPE_PARENTHESES){
                 return 1;
             }
+            constant = isEqualParantheses;
             if(strcmp(checkerToken[k].value,"not")!=0){
-                constant = isEqualParantheses;
-                count_func_with_comma++;
                 
+                count_func_with_comma++;
             }
             num=0;
 
         }
+
         if(checkerToken[k].type == TOKEN_TYPE_PARENTHESES){
             if(checkerToken[k].value[0] == '('){
                 isEqualParantheses++;
-                
+                if(k>=1 && checkerToken[k-1].type!=TOKEN_TYPE_FUNCTION){
+                    insideFunc++;
+                }
+                if(k>=1 && checkerToken[k-1].type==TOKEN_TYPE_FUNCTION ){
+                    insideFunc=0;
+                }
             }
             if(checkerToken[k].value[0] == ')'){
                 isEqualParantheses--;
+                // checking if the last function has more than one comma or not 
+                // checking whether the part from the comma to last function is balanced
                 if(isEqualParantheses == constant){
                     if(num>=2){
                         return 1;
                     }
                     num=0;
                     constant--;
-                    
+                    if(insideFunc!=0){
+                        return 1;
+                    }
+                }else{
+                    insideFunc--;
                 }
-                
+                              
             }
         }
+        //if it is comma
+        // checking whether the part from the last function to the comma is balanced
         if(checkerToken[k].type == TOKEN_TYPE_COMMA){
             num++;
             comma_count++;
+            if(insideFunc!=0){
+                return 1;
+            }
         }
         
         
     }
+    // checking if the parantheses are balanced
     if(isEqualParantheses != 0){
         return 1;
     }
+    // checking if the comma count is the same with the functions other than "not" 
+    // since "not" does not have comma
     if(comma_count!=count_func_with_comma){
         return 1;
     }
@@ -343,7 +370,7 @@ long long evaluatePostfix()
         // evaluate the result with these values and operator
         // then, push this result back to the tstack
         if(arrToken[i].type == TOKEN_TYPE_OPERATOR){
-            char op_val[64];
+            char op_val[257];
             strcpy(op_val, arrToken[i].value);
             Token tok1 = tstack[--toptstack];
             long long val1=0;
@@ -498,7 +525,7 @@ int main()
             char* token = strtok(temp, "=");
            
             char* value = strtok(NULL, "=");
-            char token_array[64] = "";
+            char token_array[257] = "";
             
             // checking if the left side of = has any errors
             int hasError = 0;
@@ -571,4 +598,3 @@ int main()
     return 0;
 }
 
-//xor((3,5))
