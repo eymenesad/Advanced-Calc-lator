@@ -259,7 +259,9 @@ int checkFunc(){
     int count_func_with_comma=0;
     int comma_count=0;
     int constant=0;
-    int insideFunc=0;
+    int constant_difference=0;
+    int isInFunction=0;
+    int commaconstant=0;
     for(int k=0;k<b;k++){
         // two seperate number cannot be placed next to each other
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
@@ -289,42 +291,44 @@ int checkFunc(){
             if(checkerToken[k+1].value[0] != '('){
                 return 1;
             }
+            constant_difference = isEqualParantheses - constant;
             constant = isEqualParantheses;
+            
+            isInFunction++;
             if(strcmp(checkerToken[k].value,"not")!=0){
                 
                 count_func_with_comma++;
             }
-            num=0;
+            //num=0;
 
         }
 
         if(checkerToken[k].type == TOKEN_TYPE_PARENTHESES){
             if(checkerToken[k].value[0] == '('){
                 isEqualParantheses++;
-                if(k>=1 && checkerToken[k-1].type!=TOKEN_TYPE_FUNCTION){
-                    insideFunc++;
-                }
-                if(k>=1 && checkerToken[k-1].type==TOKEN_TYPE_FUNCTION ){
-                    insideFunc=0;
-                }
             }
+
             if(checkerToken[k].value[0] == ')'){
+                
                 isEqualParantheses--;
                 // checking if the last function has more than one comma or not 
                 // checking whether the part from the comma to last function is balanced
-                if(isEqualParantheses == constant){
-                    if(num>=2){
-                        return 1;
+                if(isInFunction>=1){
+                    if(isEqualParantheses == constant){
+                        
+                        if(num!=1){
+                            return 1;
+                        }
+                        num--;
+                        
+                        isInFunction--;
+                        if(isEqualParantheses+1!=commaconstant){
+                            return 1;
+                        }
+                        constant -= constant_difference;
                     }
-                    num=0;
-                    constant--;
-                    if(insideFunc!=0){
-                        return 1;
-                    }
-                }else{
-                    insideFunc--;
                 }
-                              
+                
             }
         }
         //if it is comma
@@ -332,9 +336,10 @@ int checkFunc(){
         if(checkerToken[k].type == TOKEN_TYPE_COMMA){
             num++;
             comma_count++;
-            if(insideFunc!=0){
+            if(isEqualParantheses!=constant+1){
                 return 1;
             }
+            commaconstant = isEqualParantheses;
         }
         
         
@@ -447,10 +452,10 @@ long long evaluatePostfix()
 }
 //function for checking if the given variable is in the lookup array
 int isInsideLookup(char arr[]){
-    int ind_look=0;
+    
     for(int m=0;m<128;m++){
         if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arr)==0){
-            return ind_look;
+            return m;
             break;
         }
     }
@@ -597,4 +602,3 @@ int main()
     
     return 0;
 }
-
