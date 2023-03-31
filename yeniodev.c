@@ -255,11 +255,9 @@ int infixToPostfix(char* infix)
 int checkFunc(){
     // initializing parameters or flags to be used
     int isEqualParantheses=0;
-    int num=0;
+    //int num=0;
     int count_func_with_comma=0;
     int comma_count=0;
-    int constant=0;
-    int insideFunc=0;
     for(int k=0;k<b;k++){
         // two seperate number cannot be placed next to each other
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
@@ -289,52 +287,32 @@ int checkFunc(){
             if(checkerToken[k+1].value[0] != '('){
                 return 1;
             }
-            constant = isEqualParantheses;
+            
             if(strcmp(checkerToken[k].value,"not")!=0){
                 
                 count_func_with_comma++;
             }
-            num=0;
 
         }
 
         if(checkerToken[k].type == TOKEN_TYPE_PARENTHESES){
             if(checkerToken[k].value[0] == '('){
                 isEqualParantheses++;
-                if(k>=1 && checkerToken[k-1].type!=TOKEN_TYPE_FUNCTION){
-                    insideFunc++;
-                }
-                if(k>=1 && checkerToken[k-1].type==TOKEN_TYPE_FUNCTION ){
-                    insideFunc=0;
-                }
             }
+
             if(checkerToken[k].value[0] == ')'){
+                
                 isEqualParantheses--;
                 // checking if the last function has more than one comma or not 
                 // checking whether the part from the comma to last function is balanced
-                if(isEqualParantheses == constant){
-                    if(num>=2){
-                        return 1;
-                    }
-                    num=0;
-                    constant--;
-                    if(insideFunc!=0){
-                        return 1;
-                    }
-                }else{
-                    insideFunc--;
-                }
-                              
+                                
             }
         }
         //if it is comma
         // checking whether the part from the last function to the comma is balanced
         if(checkerToken[k].type == TOKEN_TYPE_COMMA){
-            num++;
             comma_count++;
-            if(insideFunc!=0){
-                return 1;
-            }
+            
         }
         
         
@@ -447,10 +425,10 @@ long long evaluatePostfix()
 }
 //function for checking if the given variable is in the lookup array
 int isInsideLookup(char arr[]){
-    int ind_look=0;
+    
     for(int m=0;m<128;m++){
         if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arr)==0){
-            return ind_look;
+            return m;
             break;
         }
     }
