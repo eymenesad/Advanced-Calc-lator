@@ -29,8 +29,8 @@ Token checkerToken[257];
 Token arrToken[256+1];
 
 // Lookup arrays are for memorization of variables. Lookup array records the input as string and lookup_2 records integer value of that string.
-char lookup[128][257];
-long long lookup_2[128];
+char lookup[257][257];
+long long lookup_2[257];
 
 // a is the index of arrToken
 int a=0;
@@ -80,7 +80,7 @@ int infixToPostfix(char* infix)
     // stackToken includes operators, functions and parantheses  
     Token stackToken[256+1];
     // funcStack shows which function is the last one
-    Token funcStack[50];
+    Token funcStack[257];
     // index for funcStack
     int funcCounter=0;
 
@@ -255,11 +255,8 @@ int infixToPostfix(char* infix)
 int checkFunc(){
     // initializing parameters or flags to be used
     int isEqualParantheses=0;
-    int num=0;
     int count_func_with_comma=0;
     int comma_count=0;
-    int constant=0;
-    int insideFunc=0;
     for(int k=0;k<b;k++){
         // two seperate number cannot be placed next to each other
         if(checkerToken[k].type == TOKEN_TYPE_NUMBER){
@@ -289,52 +286,58 @@ int checkFunc(){
             if(checkerToken[k+1].value[0] != '('){
                 return 1;
             }
-            constant = isEqualParantheses;
+            
             if(strcmp(checkerToken[k].value,"not")!=0){
-                
                 count_func_with_comma++;
+                int existingparantheses = isEqualParantheses;
+                int tempParant = existingparantheses;
+                int num=0;
+                for(int p=k+1;;p++){
+                    if(p==b){
+                        return 1;
+                    }
+                    if(checkerToken[p].type ==TOKEN_TYPE_PARENTHESES && checkerToken[p].value[0]=='('){
+                        tempParant++;
+                    }
+                    if(checkerToken[p].type ==TOKEN_TYPE_PARENTHESES && checkerToken[p].value[0]==')'){
+                        tempParant--;
+                        if(tempParant == existingparantheses){
+                            break;
+                        }
+                        
+                    }
+
+                    if(tempParant==existingparantheses+1 && checkerToken[p].type ==TOKEN_TYPE_COMMA){
+                        num++;
+                    }
+                    
+
+                }
+                if(num != 1){
+                    return 1;
+                }
             }
-            num=0;
 
         }
 
         if(checkerToken[k].type == TOKEN_TYPE_PARENTHESES){
             if(checkerToken[k].value[0] == '('){
                 isEqualParantheses++;
-                if(k>=1 && checkerToken[k-1].type!=TOKEN_TYPE_FUNCTION){
-                    insideFunc++;
-                }
-                if(k>=1 && checkerToken[k-1].type==TOKEN_TYPE_FUNCTION ){
-                    insideFunc=0;
-                }
             }
+
             if(checkerToken[k].value[0] == ')'){
+                
                 isEqualParantheses--;
                 // checking if the last function has more than one comma or not 
                 // checking whether the part from the comma to last function is balanced
-                if(isEqualParantheses == constant){
-                    if(num>=2){
-                        return 1;
-                    }
-                    num=0;
-                    constant--;
-                    if(insideFunc!=0){
-                        return 1;
-                    }
-                }else{
-                    insideFunc--;
-                }
-                              
+                                
             }
         }
         //if it is comma
         // checking whether the part from the last function to the comma is balanced
         if(checkerToken[k].type == TOKEN_TYPE_COMMA){
-            num++;
             comma_count++;
-            if(insideFunc!=0){
-                return 1;
-            }
+            
         }
         
         
@@ -429,7 +432,7 @@ long long evaluatePostfix()
         // push this int value to the tstack
         }else if(arrToken[i].type == TOKEN_TYPE_VARIABLE){
             long long val_var=0;
-            for(int m=0;m<128;m++){
+            for(int m=0;m<257;m++){
                 if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arrToken[i].value)==0){
                     val_var = lookup_2[m];
                     break;
@@ -447,10 +450,10 @@ long long evaluatePostfix()
 }
 //function for checking if the given variable is in the lookup array
 int isInsideLookup(char arr[]){
-    int ind_look=0;
-    for(int m=0;m<128;m++){
+    
+    for(int m=0;m<257;m++){
         if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arr)==0){
-            return ind_look;
+            return m;
             break;
         }
     }
@@ -459,7 +462,7 @@ int isInsideLookup(char arr[]){
 int main()
 {
     //initializing the lookup arrays
-    for(int k=0;k<128;k++){
+    for(int k=0;k<257;k++){
         strcpy(lookup[k],"");
         lookup_2[k]=0;
     }
