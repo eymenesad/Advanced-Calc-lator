@@ -29,8 +29,8 @@ Token checkerToken[257];
 Token arrToken[256+1];
 
 // Lookup arrays are for memorization of variables. Lookup array records the input as string and lookup_2 records integer value of that string.
-char lookup[128][257];
-long long lookup_2[128];
+char lookup[257][257];
+long long lookup_2[257];
 
 // a is the index of arrToken
 int a=0;
@@ -80,7 +80,7 @@ int infixToPostfix(char* infix)
     // stackToken includes operators, functions and parantheses  
     Token stackToken[256+1];
     // funcStack shows which function is the last one
-    Token funcStack[50];
+    Token funcStack[257];
     // index for funcStack
     int funcCounter=0;
 
@@ -255,7 +255,7 @@ int infixToPostfix(char* infix)
 int checkFunc(){
     // initializing parameters or flags to be used
     int isEqualParantheses=0;
-    //int num=0;
+    int num=0;
     int count_func_with_comma=0;
     int comma_count=0;
     for(int k=0;k<b;k++){
@@ -289,9 +289,9 @@ int checkFunc(){
             }
             
             if(strcmp(checkerToken[k].value,"not")!=0){
-                
                 count_func_with_comma++;
             }
+            num=0;
 
         }
 
@@ -407,7 +407,7 @@ long long evaluatePostfix()
         // push this int value to the tstack
         }else if(arrToken[i].type == TOKEN_TYPE_VARIABLE){
             long long val_var=0;
-            for(int m=0;m<128;m++){
+            for(int m=0;m<257;m++){
                 if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arrToken[i].value)==0){
                     val_var = lookup_2[m];
                     break;
@@ -425,7 +425,7 @@ long long evaluatePostfix()
 }
 //function for checking if the given variable is in the lookup array
 int isInsideLookup(char arr[]){
-    
+    int ind_look=0;
     for(int m=0;m<128;m++){
         if(strcmp(lookup[m], "")!=0 && strcmp(lookup[m], arr)==0){
             return m;
@@ -437,7 +437,7 @@ int isInsideLookup(char arr[]){
 int main()
 {
     //initializing the lookup arrays
-    for(int k=0;k<128;k++){
+    for(int k=0;k<257;k++){
         strcpy(lookup[k],"");
         lookup_2[k]=0;
     }
